@@ -1,0 +1,378 @@
+﻿@model testrobo.Models.Units
+
+
+
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        width: 1000px;
+        height: 50px;
+    }
+</style>
+
+@Html.AntiForgeryToken();
+@Html.HiddenFor(model => model.xUnit, new { @id = "hfXUnit" })
+@Html.HiddenFor(model => model.yUnit, new { @id = "hfYUnit" })
+
+@Html.HiddenFor(model => model.setSelectedRow, new { @id = "hfSelectedRow" })
+@Html.HiddenFor(model => model.setSelectedColumn, new { @id = "hfSelectedColumn" })
+
+@Html.HiddenFor(model => model.directions, new { @id = "hfDirections" })
+
+@using (Html.BeginForm())
+{
+    <table>
+        <tr>
+            <td>
+                <div class="form-group">
+                    @Html.LabelFor(model => model.xUnit)
+                    @Html.TextBoxFor(model => model.xUnit, new { id = "txtXunit" })
+                </div>
+            </td>
+            <td>
+                <label>Initial X-Position</label>
+                <input id="intXunit" type="text" value="0"/>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="form-group">
+                    @Html.LabelFor(model => model.yUnit)
+                    @Html.TextBoxFor(model => model.yUnit, new { id = "txtYunit" })
+                </div>
+            </td>
+            <td>
+                <label>Initial Y-Position</label>
+                <input id="intYunit" type="text" value="0" />
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <div>
+                    <input type="submit" value="Set Units" />
+                </div>
+            </td>
+            <td>
+                <label>Initial Direction</label>
+                <select id="intDirections">
+                    <option value="North">North</option>
+                    <option value="East">East</option>
+                    <option value="South">South</option>
+                    <option value="West">West</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            </td>
+            <td>
+                <input id="intSetInitialPosition" type="button" value="Set Initial Position" />
+            </td>
+        </tr>
+    </table>
+    <br />
+
+    <div>
+        @*@Html.Partial("CreateUnit", Model)*@
+        <table id="tblUnits">
+            @for (int i = @Model.yUnit - 1; i >= 0; i--)
+            {
+                <tr>
+                    @for (int j = 0; j < @Model.xUnit; j++)
+                    {
+                        string bgColor = @i == @Model.setSelectedColumn && j == @Model.setSelectedRow ? "yellow" : "white";
+                        <td style="background-color:@bgColor">
+                            (@j.ToString(), @i.ToString(), @Model.directions)
+                        </td>
+                    }
+
+                </tr>
+            }
+        </table>
+    </div>
+    <br />
+    <div>
+        <input type="button" id="btnMove" value="Move" />
+        <input type="button" id="btnRotateRight" value="Rotate Right" />
+        <input type="button" id="btnRotateLeft" value="Rotate Left" />
+        <input type="button" id="btnReport" value="Report" />
+    </div>
+
+}
+
+
+@section Scripts
+{
+    <script src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $('#btnMove').click(function () {
+
+                let hfXUnit = parseInt($('#hfXUnit').val());
+                let hfYUnit = parseInt($('#hfYUnit').val());
+
+                let hfSelectedRow = parseInt($('#hfSelectedRow').val());
+                let hfSelectedColumn = parseInt($('#hfSelectedColumn').val());
+
+                let hfDirections = $('#hfDirections').val();
+
+
+                if ((hfDirections.toLowerCase() == 'north' && hfSelectedColumn == hfYUnit - 1) ||
+                    (hfDirections.toLowerCase() == 'south' && hfSelectedColumn == 0) ||
+                    (hfDirections.toLowerCase() == 'east' && hfSelectedRow == hfXUnit - 1) ||
+                    (hfDirections.toLowerCase() == 'west' && hfSelectedRow == 0)) {
+                    alert('Cant Move.');
+                }
+                else {
+                    //alert(hfDirections.toLowerCase());
+                    if (hfDirections.toLowerCase() == "north") {
+                        $('#hfSelectedColumn').val(hfSelectedColumn + 1);
+                        hfSelectedColumn = hfSelectedColumn + 1;
+                    }
+
+                    if (hfDirections.toLowerCase() == "south") {
+                        $('#hfSelectedColumn').val(hfSelectedColumn - 1);
+                        hfSelectedColumn = hfSelectedColumn - 1;
+                    }
+
+                    if (hfDirections.toLowerCase() == "east") {
+                        $('#hfSelectedRow').val(hfSelectedRow + 1);
+                        hfSelectedRow = hfSelectedRow + 1;
+                    }
+
+                    if (hfDirections.toLowerCase() == "west") {
+                        $('#hfSelectedRow').val(hfSelectedRow - 1);
+                        hfSelectedRow = hfSelectedRow - 1;
+                    }
+
+                    createUnit(hfXUnit, hfYUnit, hfSelectedRow, hfSelectedColumn, hfDirections);
+                }
+            })
+
+            $('#btnReport').click(function () {
+
+                let hfSelectedRow = $('#hfSelectedRow').val();
+                let hfSelectedColumn = $('#hfSelectedColumn').val();
+
+                let hfDirections = $('#hfDirections').val();
+
+                alert(hfSelectedRow + ', ' + hfSelectedColumn + ', ' + hfDirections);
+
+            })
+
+            $('#btnRotateRight').click(function () {
+
+                let hfXUnit = $('#hfXUnit').val();
+                let hfYUnit = $('#hfYUnit').val();
+
+                let hfSelectedRow = $('#hfSelectedRow').val();
+                let hfSelectedColumn = $('#hfSelectedColumn').val();
+
+                let hfDirections = $('#hfDirections').val();
+
+
+                if (hfDirections.toLowerCase() == "north") {
+                    $('#hfDirections').val('East');
+                    hfDirections = "East";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+                if (hfDirections.toLowerCase() == "east") {
+                    $('#hfDirections').val('South');
+                    hfDirections = "South";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+                if (hfDirections.toLowerCase() == "south") {
+                    $('#hfDirections').val('West');
+                    hfDirections = "West";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+                if (hfDirections.toLowerCase() == "west") {
+                    $('#hfDirections').val('North');
+                    hfDirections = "North";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+            })
+
+            $('#btnRotateLeft').click(function () {
+
+                let hfXUnit = $('#hfXUnit').val();
+                let hfYUnit = $('#hfYUnit').val();
+
+                let hfSelectedRow = $('#hfSelectedRow').val();
+                let hfSelectedColumn = $('#hfSelectedColumn').val();
+
+                let hfDirections = $('#hfDirections').val();
+
+                if (hfDirections.toLowerCase() == "north") {
+                    $('#hfDirections').val('West');
+                    hfDirections = "West";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+                if (hfDirections.toLowerCase() == "east") {
+                    $('#hfDirections').val('North');
+                    hfDirections = "North";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+                if (hfDirections.toLowerCase() == "south") {
+                    $('#hfDirections').val('East');
+                    hfDirections = "East";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+                if (hfDirections.toLowerCase() == "west") {
+                    $('#hfDirections').val('South');
+                    hfDirections = "South";
+                    createUnit(parseInt(hfXUnit), parseInt(hfYUnit), parseInt(hfSelectedRow), parseInt(hfSelectedColumn), hfDirections);
+                    return;
+                }
+
+            })
+
+            $('#txtXunit').focusout(function () {
+
+                let txtXunit = $('#txtXunit').val();
+
+                if (txtXunit == '') {
+                   // $('#txtXunit').focus();
+                    alert('Please Enter X-Unit.');                   
+                    return;
+                }
+                if (parseInt(txtXunit) < 0 || isNaN(txtXunit)) {
+                    alert('Invalid X-Unit.');
+                    $('#txtXunit').focus().val(5);
+                    return;
+                }
+            })
+
+            $('#txtYunit').focusout(function () {
+
+                let txtYunit = $('#txtYunit').val();
+
+                if (txtYunit == '') {
+                    alert('Please Enter Y-Unit.');
+                   // $('#txtYunit').focus();
+                    return;
+                }
+                if (parseInt(txtYunit) < 0 || isNaN(txtYunit)) {
+                    alert('Invalid Y-Unit.');
+                    $('#txtYunit').focus().val(5);
+                    return;
+                }
+            })
+
+            $('#intXunit').focusout(function () {
+
+                let intXunit = $('#intXunit').val();
+                let hfXUnit = parseInt($('#hfXUnit').val());
+                if (intXunit == '') {
+                    alert('Please Enter Initial X-Positions.');
+                    //$('#intXunit').focus();
+                    return;
+                }
+                if (parseInt(intXunit) < 0 || parseInt(intXunit) > hfXUnit - 1 || isNaN(intXunit)) {
+                    alert('Invalid X-Positions.');
+                    $('#intXunit').focus().val(0);
+                    return;
+                }
+            })
+
+            $('#intYunit').focusout(function () {
+                let hfYUnit = parseInt($('#hfYUnit').val());
+                let intYunit = $('#intYunit').val();
+                if (intYunit == '') {
+                    alert('Please Enter Initial Y-Positions.');
+                   // $('#intYunit').focus();
+                    return;
+                }
+
+                if (parseInt(intYunit) < 0 || parseInt(intYunit) > hfYUnit - 1 || isNaN(intYunit)) {
+                    alert('Invalid Y-Positions.');
+                    $('#intYunit').focus().val(0);
+                    return;
+                }
+
+            })
+
+            $('#intSetInitialPosition').click(function () {
+
+
+                let hfXUnit = parseInt($('#hfXUnit').val());
+                let hfYUnit = parseInt($('#hfYUnit').val());
+
+                let intXunit = $('#intXunit').val();
+                let intYunit = $('#intYunit').val();
+
+                if (intXunit == '') {
+                    alert('Please Enter Initial X-Positions.');
+                    //$('#intXunit').focus();
+                    return;
+                }
+                if (intYunit == '') {
+                    alert('Please Enter Initial Y-Positions.');
+                   // $('#intYunit').focus();
+                    return;
+                }
+
+                if (parseInt(intXunit) < 0 || parseInt(intXunit) > hfXUnit - 1) {
+                    alert('Invalid X-Positions.');
+                   // $('#intXunit').focus();
+                    return;
+                }
+
+                if (parseInt(intYunit) < 0 || parseInt(intYunit) > hfYUnit - 1) {
+                    alert('Invalid Y-Positions.');
+                    //$('#intYunit').focus();
+                    return;
+                }
+
+                let intDirections = $("#intDirections option:selected").val();
+
+                $('#hfSelectedRow').val(intYunit);
+                $('#hfSelectedColumn').val(intXunit);
+                $('#hfDirections').val(intDirections);
+
+                createUnit(hfXUnit, hfYUnit, parseInt(intYunit), parseInt(intXunit), intDirections);
+            })
+        })
+
+        function createUnit(hfXUnit, hfYUnit, hfSelectedRow, hfSelectedColumn, hfDirections) {
+            $('#tblUnits').empty();
+            var strTable = "";
+            //strTable = strTable + '<table><tr><td>data</td></tr></table>';
+            for (let i = hfYUnit - 1; i >= 0; i--) {
+                strTable = strTable + '<tr>';
+                for (let j = 0; j < hfXUnit; j++) {
+                    let bgColor = i == hfSelectedColumn && j == hfSelectedRow ? "yellow" : "white";
+                    strTable = strTable + "<td style='background-color:" + bgColor + "'>(" + j + ", " + i + ", " + hfDirections + ")</td>";
+                }
+                strTable = strTable + '</tr>';
+                //alert(strTable);
+            }
+            //alert(strTable);
+            $('#tblUnits').append(strTable);
+        }
+    </script>
+}
+
+
+
+
+
